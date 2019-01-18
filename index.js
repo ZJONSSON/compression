@@ -208,9 +208,15 @@ function compression (options) {
         }
       })
 
-      stream.on('end', function onStreamEnd () {
-        _end.call(res)
-      })
+      var _flush = stream._flush
+      stream._flush = function (cb) {
+        _flush.call(stream, function () {
+          cb()
+          setImmediate(function() {
+            _end.call(res)
+          })
+        })
+      }
 
       _on.call(res, 'drain', function onResponseDrain () {
         stream.resume()
